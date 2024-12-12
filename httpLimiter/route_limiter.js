@@ -1,6 +1,6 @@
 import { IpLimiter } from "./ip_limiter.js";
 
-export class RouteLimiter {
+class RouteLimiter {
 	constructor() {
 		this.routeSetMap = new Map();
 	}
@@ -31,6 +31,8 @@ export class RouteLimiter {
 		return [null, true];
 	}
 }
+
+export default { RouteLimiter };
 
 // example usage
 if (require.main == module) {

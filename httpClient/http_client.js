@@ -6,7 +6,7 @@ import xml2js from 'xml2js';
 import querystring from 'querystring';
 import FormData from 'form-data';
 
-export const HttpMethods = {
+const HttpMethods = {
 	GET: 'GET',
 	POST: 'POST',
 	PUT: 'PUT',
@@ -14,7 +14,7 @@ export const HttpMethods = {
 	DELETE: 'DELETE'
 };
 
-export const HttpContentTypes = {
+const HttpContentTypes = {
 	JSON: 'application/json',
 	XML: 'application/xml',
 	FORM: 'application/x-www-form-urlencoded',
@@ -25,7 +25,7 @@ export const HttpContentTypes = {
 	JAVASCRIPT: 'application/javascript',
 };
 
-export const AcceptTypes = {
+const AcceptTypes = {
 	JSON: 'application/json',
 	XML: 'application/xml',
 	PLAIN: 'text/plain',
@@ -36,7 +36,7 @@ export const AcceptTypes = {
 	ANY: '*/*',
 };
 
-export class HttpClient {
+class HttpClient {
 	constructor(url) {
 		this.url = url;
 		this.method = 'GET';
@@ -229,6 +229,7 @@ export class HttpClient {
 	}
 }
 
+export default { HttpClient, HttpMethods, HttpContentTypes, AcceptTypes };
 
 // example usage
 if (require.main == module) {

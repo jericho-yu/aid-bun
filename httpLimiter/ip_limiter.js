@@ -1,4 +1,5 @@
-export class Visit {
+
+class Visit {
 	constructor() {
 		this.lastVisit = new Date();
 		this.visitTimes = 1;
@@ -46,7 +47,7 @@ export class Visit {
 	}
 }
 
-export class IpLimiter {
+class IpLimiter {
 	constructor() {
 		this.visitMap = new Map();
 	}
@@ -85,6 +86,8 @@ export class IpLimiter {
 		}
 	}
 }
+
+export default { Visit, IpLimiter };
 
 
 if (require.main == module) {

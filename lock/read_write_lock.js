@@ -1,4 +1,4 @@
-export class ReadWriteLock {
+class ReadWriteLock {
 	constructor() {
 		this.readers = 0; // 当前持有读锁的数量
 		this.writer = false; // 当前是否有写锁
@@ -62,34 +62,29 @@ export class ReadWriteLock {
 /**
  * 执行读锁任务
  * @param {ReadWriteLock} lock 读写锁
- * @param {number} timeout 超时时间
  * @param {function () {  }}
- * @returns {boolean|any}
+ * @returns {any|null}
  */
-export const readLock = async (lock = null, timeout = 0, fn = function () { }) => {
-	if (!lock || timeout <= 0) return [null, false];
+const readLock = async (lock = null, fn = () => { }) => {
+	if (!lock) return null;
 
 	await lock.rLock();
-	const ret = fn();
-	setTimeout(() => lock.rUnlock(), timeout);
-	return [ret, true];
+	return fn();
 };
 
 /**
  * 执行写锁任务
  * @param {ReadWriteLock} lock 读写锁
- * @param {number} timeout 超时时间
  * @param {function () {}} fn 执行命令
- * @returns {boolean|any}
+ * @returns {any|null}
  */
-export const writeLock = async (lock = null, timeout = 0, fn = function () { }) => {
-	if (!lock || timeout <= 0) return [null, false];
-
+const writeLock = async (lock = null, fn = () => { }) => {
+	if (!lock) return null;
 	await lock.lock();
-	const ret = fn();
-	setTimeout(() => lock.unlock(), timeout);
-	return [ret, true];
+	return fn();
 };
+
+export default { ReadWriteLock, readLock, writeLock };
 
 // example usage
 if (require.main == module) {

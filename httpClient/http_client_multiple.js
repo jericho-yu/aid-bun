@@ -1,5 +1,5 @@
 import collect from 'collect.js';
-import { HttpClient, HttpMethods } from './http_client';
+import http_client from './http_client';
 
 class MultipleHttpClient {
 	constructor() {
@@ -31,10 +31,12 @@ class MultipleHttpClient {
 	}
 }
 
+export default { MultipleHttpClient };
+
 // example usage
 if (require.main == module) {
-	const client1 = HttpClient.newGet("https://www.baidu.com");
-	const client2 = HttpClient.newGet('https://www.google.com');
+	const client1 = http_client.HttpClient.newGet("https://www.baidu.com");
+	const client2 = http_client.HttpClient.newGet('https://www.google.com');
 
 	let multipleHttpClient = new MultipleHttpClient();
 	multipleHttpClient = await multipleHttpClient.addClients(client1, client2).send();
