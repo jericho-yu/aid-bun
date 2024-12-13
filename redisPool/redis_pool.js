@@ -1,67 +1,75 @@
-import { Redis } from 'ioredis';
-import {}
+import redis from 'redis';
+import redis_setting from "./redis_setting.js";
+import filesystem from "../filesystem/filesystem.js";
+import collect from 'collect.js';
 
 class RedisPool {
-	constructor(redisSetting) {
-		this.connections = new Map();
-		this.connections = 
-		this.init(redisSetting);
+	/**
+	 * 通过配置文件路径实例化
+	 * @param {string} filename 配置文件路径
+	 * @returns {RedisPool}
+	 */
+	static newByRedisSettingFile(filename = '') {
+		return new RedisPool(new redis_setting.RedisSetting(filesystem.FileSystem.newByRelative(filename).getDir()).readSetting());
 	}
 
-	init(redisSetting) {
-		if (redisSetting.pool.length > 0) {
-			redisSetting.pool.forEach(pool => {
-				const client = new Redis({
-					host: redisSetting.host,
-					port: redisSetting.port,
-					password: redisSetting.password,
-					db: pool.dbNum,
+	constructor(redisSetting = {}) {
+		this.redisSetting = redisSetting;
+		this.connections = {};
+		collect(this.redisSetting?.pool).
+			each(pool => {
+				const client = new redis.createClient({
+					host: pool.host,
+					port: pool.port,
+					password: pool.password,
+					db: pool.db
 				});
-				const prefix = `${redisSetting.prefix}:${pool.prefix}`;
-				this.connections.set(pool.key, { prefix, client });
+				client.on('error', err => console.error(`Redis client err: ${err}`));
+
+				this.connections[pool.key] = { prefix: pool.prefix, client };
 			});
-		}
+
+		this.connections = collect(this.connections);
 	}
 
-	getClient(key) {
-		const connection = this.connections.get(key);
-		if (connection) {
-			return connection;
+	get(clientName = '', key = '') { }
+
+	/**
+	 * 设置值
+	 * @param {string} clientName 客户端名称
+	 * @param {string} key 键
+	 * @param {any} value 值
+	 * @param {number} expire 过期时间
+	 * @returns {RedisPool}
+	 */
+	async set(clientName = '', key = '', value = '', expire = 0) {
+		const conn = this.connections.get(clientName);
+		if (conn){
+			await conn.client.set(this._getKey(clientName, key), value);
 		}
-		return { prefix: '', client: null };
+		// await this.connections.get(clientName)?.client.set(this._getKey(clientName, key), value);
+		// if (expire > 0) await this.connections.get(clientName)?.client.expire(this._getKey(clientName, key), expire);
+		// return this;
 	}
 
-	async get(clientName, key) {
-		const { prefix, client } = this.getClient(clientName);
-		if (!client) {
-			throw new Error(`No Redis connection found for key: ${clientName}`);
-		}
-		const result = await client.get(`${prefix}:${key}`);
-		return result || null;
-	}
-
-	async set(clientName, key, value, exp) {
-		const { prefix, client } = this.getClient(clientName);
-		if (!client) {
-			throw new Error(`No Redis connection found for key: ${clientName}`);
-		}
-		await client.set(`${prefix}:${key}`, value, 'EX', exp);
-	}
-
-	async close(key) {
-		const connection = this.connections.get(key);
-		if (connection) {
-			await connection.client.quit();
-			this.connections.delete(key);
-		}
-	}
-
-	async clean() {
-		for (const [key, connection] of this.connections) {
-			await connection.client.quit();
-			this.connections.delete(key);
-		}
+	/**
+	 * 获取带有前缀的键
+	 * @param {string} clientName 客户端名称
+	 * @param {string} key 键
+	 * @returns {string}
+	 */
+	_getKey(clientName = '', key = '') {
+		const prefix = this.connections.get(clientName)?.prefix;
+		return `${prefix}${prefix ? ':' : ''}${key}`;
 	}
 }
 
-module.exports = RedisPool;
+if (require.main === module) {
+	async function main() {
+		const redisPool = RedisPool.newByRedisSettingFile("redisPool/redis.yaml");
+		// console.log("OK", redisPool.connections.keys());
+		await redisPool.set("auth", "key1", "value1", 100);
+	}
+
+	main().catch(console.error);
+}
